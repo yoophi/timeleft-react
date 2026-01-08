@@ -1,69 +1,69 @@
-# React + TypeScript + Vite
+# Timeleft (React)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+> **Don't waste your time.**
 
-Currently, two official plugins are available:
+This is a React port of the original [Timeleft](https://github.com/aoueon/timeleft) application. It helps you visualize the passing of time across various timeframes (Hour, Day, Week, Year, etc.) to encourage productivity and time awareness.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Features
 
-## Expanding the ESLint configuration
+- **Visual Dashboard**: Displays circular progress bars for different time units.
+- **Detailed Specs**: Shows precise remaining time in milliseconds, seconds, minutes, etc.
+- **Single View**: Click any card to focus on that specific timeframe (URL updates with hash).
+- **Responsive Design**: Adapts to Mobile, Tablet, and Desktop screens.
+- **Dynamic Theming**: Cards change color based on their urgency (blue to red).
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## Tech Stack
 
-```js
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+- **Framework**: [React](https://react.dev/)
+- **Build Tool**: [Vite](https://vitejs.dev/)
+- **Language**: [TypeScript](https://www.typescriptlang.org/)
+- **Routing**: [React Router](https://reactrouter.com/) (HashRouter)
+- **Styling**: Vanilla CSS (Ported from original)
+- **Code Formatting**: [Prettier](https://prettier.io/)
 
-      // Remove tseslint.configs.recommended and replace with this
-      ...tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      ...tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      ...tseslint.configs.stylisticTypeChecked,
+## Project Structure
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+src/
+├── components/
+│   ├── TimeCard.tsx       # Individual time unit card component
+│   └── TimeGrid.tsx       # Main grid layout and navigation logic
+├── hooks/
+│   └── useTimeLeft.ts     # Core logic for time calculation (Custom Hook)
+├── styles/
+│   └── global.css         # Global styles and media queries
+├── App.tsx                # Main Router configuration
+└── main.tsx               # Entry point
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Getting Started
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+### Prerequisites
 
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+- Node.js (v18 or higher recommended)
+
+### Installation
+
+```bash
+npm install
 ```
+
+### Development
+
+To start the development server:
+
+```bash
+npm run dev
+```
+
+### Build
+
+To create a production build:
+
+```bash
+npm run build
+```
+
+## License
+
+Based on the original [Timeleft](https://github.com/aoueon/timeleft) by Raoul Simionas.

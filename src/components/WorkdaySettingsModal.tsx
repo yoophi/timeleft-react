@@ -13,11 +13,60 @@ export const WorkdaySettingsModal: React.FC<WorkdaySettingsModalProps> = ({
   onClose,
   onSave,
 }) => {
-  const [settings, setSettings] = useState<WorkdaySettings>(getWorkdaySettings());
+  const [settings, setSettings] = useState<WorkdaySettings>(() => {
+    const loaded = getWorkdaySettings();
+    // workdays가 없으면 기본값으로 채움
+    if (!loaded.workdays) {
+      return {
+        ...loaded,
+        workdays: {
+          monday: true,
+          tuesday: true,
+          wednesday: true,
+          thursday: true,
+          friday: true,
+          saturday: false,
+          sunday: false,
+        },
+      };
+    }
+    return loaded;
+  });
+
+  // 입력 중인 값을 추적하기 위한 상태
+  const [inputValues, setInputValues] = useState<{
+    startHour: string;
+    startMinute: string;
+    endHour: string;
+    endMinute: string;
+  }>({
+    startHour: "",
+    startMinute: "",
+    endHour: "",
+    endMinute: "",
+  });
+  const [focusedField, setFocusedField] = useState<string | null>(null);
 
   useEffect(() => {
     if (isOpen) {
-      setSettings(getWorkdaySettings());
+      const loaded = getWorkdaySettings();
+      // workdays가 없으면 기본값으로 채움
+      if (!loaded.workdays) {
+        setSettings({
+          ...loaded,
+          workdays: {
+            monday: true,
+            tuesday: true,
+            wednesday: true,
+            thursday: true,
+            friday: true,
+            saturday: false,
+            sunday: false,
+          },
+        });
+      } else {
+        setSettings(loaded);
+      }
     }
   }, [isOpen]);
 
@@ -31,22 +80,45 @@ export const WorkdaySettingsModal: React.FC<WorkdaySettingsModalProps> = ({
     return Math.max(0, Math.min(max, value)).toString().padStart(2, "0");
   };
 
+  const getDisplayValue = (
+    field: "startHour" | "startMinute" | "endHour" | "endMinute",
+    max: number
+  ): string => {
+    if (focusedField === field) {
+      return inputValues[field];
+    }
+    return formatTimeValue(settings[field], max);
+  };
+
+  const handleFocus = (
+    field: "startHour" | "startMinute" | "endHour" | "endMinute"
+  ) => {
+    setFocusedField(field);
+    setInputValues({
+      ...inputValues,
+      [field]: settings[field].toString(),
+    });
+  };
+
   const handleTimeChange = (
     field: "startHour" | "startMinute" | "endHour" | "endMinute",
     value: string
   ) => {
     // 숫자만 추출
     const numericValue = value.replace(/\D/g, "");
-    if (numericValue === "") {
-      setSettings({ ...settings, [field]: 0 });
-      return;
-    }
-    
-    const num = parseInt(numericValue, 10);
+    setInputValues({ ...inputValues, [field]: numericValue });
+  };
+
+  const handleBlur = (
+    field: "startHour" | "startMinute" | "endHour" | "endMinute"
+  ) => {
     const max = field.includes("Hour") ? 23 : 59;
+    const numericValue = inputValues[field];
+    const num = numericValue === "" ? 0 : parseInt(numericValue, 10);
     const clampedValue = Math.max(0, Math.min(max, num));
-    
+
     setSettings({ ...settings, [field]: clampedValue });
+    setFocusedField(null);
   };
 
   if (!isOpen) return null;
@@ -91,12 +163,10 @@ export const WorkdaySettingsModal: React.FC<WorkdaySettingsModalProps> = ({
                 type="text"
                 inputMode="numeric"
                 pattern="[0-9]*"
-                value={formatTimeValue(settings.startHour, 23)}
+                value={getDisplayValue("startHour", 23)}
+                onFocus={() => handleFocus("startHour")}
                 onChange={(e) => handleTimeChange("startHour", e.target.value)}
-                onBlur={(e) => {
-                  const value = parseInt(e.target.value) || 0;
-                  setSettings({ ...settings, startHour: Math.max(0, Math.min(23, value)) });
-                }}
+                onBlur={() => handleBlur("startHour")}
                 style={{
                   width: "60px",
                   padding: "8px",
@@ -112,12 +182,10 @@ export const WorkdaySettingsModal: React.FC<WorkdaySettingsModalProps> = ({
                 type="text"
                 inputMode="numeric"
                 pattern="[0-9]*"
-                value={formatTimeValue(settings.startMinute, 59)}
+                value={getDisplayValue("startMinute", 59)}
+                onFocus={() => handleFocus("startMinute")}
                 onChange={(e) => handleTimeChange("startMinute", e.target.value)}
-                onBlur={(e) => {
-                  const value = parseInt(e.target.value) || 0;
-                  setSettings({ ...settings, startMinute: Math.max(0, Math.min(59, value)) });
-                }}
+                onBlur={() => handleBlur("startMinute")}
                 style={{
                   width: "60px",
                   padding: "8px",
@@ -140,12 +208,10 @@ export const WorkdaySettingsModal: React.FC<WorkdaySettingsModalProps> = ({
                 type="text"
                 inputMode="numeric"
                 pattern="[0-9]*"
-                value={formatTimeValue(settings.endHour, 23)}
+                value={getDisplayValue("endHour", 23)}
+                onFocus={() => handleFocus("endHour")}
                 onChange={(e) => handleTimeChange("endHour", e.target.value)}
-                onBlur={(e) => {
-                  const value = parseInt(e.target.value) || 0;
-                  setSettings({ ...settings, endHour: Math.max(0, Math.min(23, value)) });
-                }}
+                onBlur={() => handleBlur("endHour")}
                 style={{
                   width: "60px",
                   padding: "8px",
@@ -161,12 +227,10 @@ export const WorkdaySettingsModal: React.FC<WorkdaySettingsModalProps> = ({
                 type="text"
                 inputMode="numeric"
                 pattern="[0-9]*"
-                value={formatTimeValue(settings.endMinute, 59)}
+                value={getDisplayValue("endMinute", 59)}
+                onFocus={() => handleFocus("endMinute")}
                 onChange={(e) => handleTimeChange("endMinute", e.target.value)}
-                onBlur={(e) => {
-                  const value = parseInt(e.target.value) || 0;
-                  setSettings({ ...settings, endMinute: Math.max(0, Math.min(59, value)) });
-                }}
+                onBlur={() => handleBlur("endMinute")}
                 style={{
                   width: "60px",
                   padding: "8px",
@@ -177,6 +241,89 @@ export const WorkdaySettingsModal: React.FC<WorkdaySettingsModalProps> = ({
                   textAlign: "center",
                 }}
               />
+            </div>
+          </div>
+
+          <div>
+            <label style={{ display: "block", marginBottom: "8px", color: "#ccc" }}>
+              근무 요일
+            </label>
+            <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
+              {[
+                { key: "monday", label: "월" },
+                { key: "tuesday", label: "화" },
+                { key: "wednesday", label: "수" },
+                { key: "thursday", label: "목" },
+                { key: "friday", label: "금" },
+                { key: "saturday", label: "토" },
+                { key: "sunday", label: "일" },
+              ].map(({ key, label }) => {
+                const isChecked = settings.workdays?.[key as keyof typeof settings.workdays] ?? false;
+                return (
+                  <label
+                    key={key}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "8px",
+                      color: isChecked ? "#f5f5f5" : "#888",
+                      cursor: "pointer",
+                      padding: "6px 12px",
+                      borderRadius: "4px",
+                      backgroundColor: isChecked ? "#2a4a6a" : "#2a2a2a",
+                      border: `1px solid ${isChecked ? "#4a9eff" : "#444"}`,
+                      transition: "all 0.2s ease",
+                      userSelect: "none",
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!isChecked) {
+                        e.currentTarget.style.backgroundColor = "#333";
+                        e.currentTarget.style.borderColor = "#555";
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!isChecked) {
+                        e.currentTarget.style.backgroundColor = "#2a2a2a";
+                        e.currentTarget.style.borderColor = "#444";
+                      }
+                    }}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={isChecked}
+                      onChange={(e) => {
+                        e.stopPropagation();
+                        const newWorkdays = {
+                          ...(settings.workdays || {
+                            monday: true,
+                            tuesday: true,
+                            wednesday: true,
+                            thursday: true,
+                            friday: true,
+                            saturday: false,
+                            sunday: false,
+                          }),
+                          [key]: e.target.checked,
+                        };
+                        setSettings({
+                          ...settings,
+                          workdays: newWorkdays,
+                        });
+                      }}
+                      onClick={(e) => e.stopPropagation()}
+                      style={{
+                        width: "18px",
+                        height: "18px",
+                        cursor: "pointer",
+                        pointerEvents: "auto",
+                        accentColor: "#4a9eff",
+                        flexShrink: 0,
+                      }}
+                    />
+                    <span style={{ fontWeight: isChecked ? "500" : "400" }}>{label}</span>
+                  </label>
+                );
+              })}
             </div>
           </div>
         </div>

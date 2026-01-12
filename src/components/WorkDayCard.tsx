@@ -166,7 +166,7 @@ export const WorkDayCard: React.FC<WorkDayCardProps> = ({
         </div>
       </div>
       <div className="c-card-footer" style={{ position: "relative" }}>
-        <div 
+        <div
           style={{
             display: "flex",
             gap: "4px",
@@ -183,65 +183,97 @@ export const WorkDayCard: React.FC<WorkDayCardProps> = ({
             const startMin = startMinutes % 60;
             const endHour = Math.floor(endMinutes / 60);
             const endMin = endMinutes % 60;
-            
+
             const timeString = `${startHour}:${startMin.toString().padStart(2, "0")} - ${endHour}:${endMin.toString().padStart(2, "0")}`;
-            
+
             // 각 블록의 경과 비율에 따른 색깔 계산
             const blockPercentage = ((index + 1) / totalBlocks) * 100;
             const { progressColor, progressShadow, containerColor } = useColorLogic(blockPercentage);
-            
+
             // 현재 시간 기준으로 블록 상태 확인
             const blockStatus = getBlockStatus(index);
             const isHovered = hoveredBlock === index;
-            
-            // 상태에 따른 스타일 설정
-            let backgroundColor: string;
-            let opacity: number;
-            let boxShadow: string | undefined;
-            let border: string | undefined;
-            
-            if (blockStatus === 'elapsed') {
-              // 지난 블록: 색상 표시
-              backgroundColor = progressColor;
-              opacity = 1.0;
-              boxShadow = progressShadow;
-              border = "none";
-            } else if (blockStatus === 'current') {
-              // 현재 진행 중인 블록: 중간 밝기
-              backgroundColor = progressColor;
-              opacity = 0.5;
-              boxShadow = progressShadow;
-              border = "1px solid rgba(255, 255, 255, 0.3)";
-            } else {
-              // 아직 지나지 않은 블록: 조금 더 밝게
-              backgroundColor = containerColor;
-              opacity = 0.4;
-              boxShadow = "none";
-              border = "1px solid #555";
-            }
-            
+
+            // 현재 블록의 진행률 계산
+            const getBlockProgress = (): number => {
+              if (blockStatus === 'elapsed') return 100;
+              if (blockStatus === 'future') return 0;
+
+              // 현재 블록의 진행률 계산
+              const blockStartMinutes = startMinutesTotal + index * minutesPerBlock;
+              const blockEndMinutes = Math.min(blockStartMinutes + minutesPerBlock, endMinutesTotal);
+
+              const blockStartTime = new Date(
+                today.getFullYear(),
+                today.getMonth(),
+                today.getDate(),
+                Math.floor(blockStartMinutes / 60),
+                blockStartMinutes % 60
+              ).getTime();
+              const blockEndTime = new Date(
+                today.getFullYear(),
+                today.getMonth(),
+                today.getDate(),
+                Math.floor(blockEndMinutes / 60),
+                blockEndMinutes % 60
+              ).getTime();
+
+              return ((currentTime - blockStartTime) / (blockEndTime - blockStartTime)) * 100;
+            };
+
+            const blockProgress = getBlockProgress();
+
             return (
               <div
                 key={index}
                 style={{
-                  width: "20px",
-                  height: "20px",
-                  backgroundColor,
-                  boxShadow,
-                  borderRadius: "2px",
-                  transition: "all 0.3s ease-out",
-                  opacity,
-                  transform: isHovered ? "scale(1.2)" : "scale(1)",
-                  zIndex: isHovered ? 10 : 1,
-                  cursor: "pointer",
                   position: "relative",
-                  border,
+                  flex: 1,
+                  height: "12px",
+                  backgroundColor: containerColor,
+                  borderRadius: "4px",
+                  border: "1px solid #444",
+                  overflow: "hidden",
+                  cursor: "pointer",
+                  transform: isHovered ? "scale(1.1)" : "scale(1)",
+                  transition: "all 0.3s ease-out",
+                  zIndex: isHovered ? 10 : 1,
                 }}
                 onMouseEnter={(e) => handleBlockMouseEnter(index, e)}
                 onMouseLeave={handleBlockMouseLeave}
                 onMouseMove={handleBlockMouseMove}
                 title={timeString}
-              />
+              >
+                {/* 진행률 표시 (현재 블록만 - 가로 방향) */}
+                {blockStatus === 'current' && (
+                  <div
+                    style={{
+                      position: "absolute",
+                      left: 0,
+                      top: 0,
+                      bottom: 0,
+                      width: `${blockProgress}%`,
+                      backgroundColor: progressColor,
+                      boxShadow: progressShadow,
+                      transition: "all 0.3s ease-out",
+                    }}
+                  />
+                )}
+                {/* 지난 블록은 완전히 채워진 배경 */}
+                {blockStatus === 'elapsed' && (
+                  <div
+                    style={{
+                      position: "absolute",
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      backgroundColor: progressColor,
+                      boxShadow: progressShadow,
+                    }}
+                  />
+                )}
+              </div>
             );
           })}
         </div>

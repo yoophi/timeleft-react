@@ -1,6 +1,20 @@
 import { useState, useEffect } from "react";
 import { getWorkdaySettings } from "../utils/workdaySettings";
 
+// 요일을 숫자로 변환 (0=일요일, 1=월요일, ..., 6=토요일)
+function getDayOfWeekNumber(dayName: string): number {
+  const mapping: { [key: string]: number } = {
+    sunday: 0,
+    monday: 1,
+    tuesday: 2,
+    wednesday: 3,
+    thursday: 4,
+    friday: 5,
+    saturday: 6,
+  };
+  return mapping[dayName] ?? -1;
+}
+
 export interface TimeSpec {
   value: string;
   label: string;
@@ -18,6 +32,7 @@ export const TIME_TYPES = [
   "day",
   "workday",
   "week",
+  "workweek",
   "month",
   "year",
   "decade",
@@ -161,6 +176,128 @@ export function useTimeLeft() {
           specs["d"] = numberWithCommas(daysLeft);
           break;
 
+        case "workweek":
+          // 설정에서 근무 요일 가져오기
+          const workweekSettings = getWorkdaySettings();
+          const workweekDays = workweekSettings.workdays;
+          
+          // 근무 요일 목록 생성 (0=일요일, 1=월요일, ..., 6=토요일)
+          const enabledWorkdays: number[] = [];
+          Object.entries(workweekDays).forEach(([dayName, enabled]) => {
+            if (enabled) {
+              const dayNum = getDayOfWeekNumber(dayName);
+              if (dayNum >= 0) {
+                enabledWorkdays.push(dayNum);
+              }
+            }
+          });
+          
+          if (enabledWorkdays.length === 0) {
+            // 근무 요일이 없으면 0%로 설정
+            amount = 0;
+            specs["d"] = "0";
+            specs["h"] = "0";
+            specs["m"] = "0";
+            break;
+          }
+          
+          // 현재 주의 시작일 찾기 (가장 이른 근무 요일)
+          const currentWeekday = weekday; // 0=일요일, 1=월요일, ..., 6=토요일
+          const earliestWorkday = Math.min(...enabledWorkdays);
+          const latestWorkday = Math.max(...enabledWorkdays);
+          
+          // 현재 주의 시작일 계산 (가장 이른 근무 요일)
+          let weekStartDay = day;
+          if (currentWeekday < earliestWorkday) {
+            // 현재 요일이 가장 이른 근무 요일보다 이전이면, 이전 주의 가장 이른 근무 요일
+            weekStartDay = day - 7 + (earliestWorkday - currentWeekday);
+          } else if (currentWeekday > earliestWorkday) {
+            // 현재 요일이 가장 이른 근무 요일보다 이후면, 이번 주의 가장 이른 근무 요일
+            weekStartDay = day - (currentWeekday - earliestWorkday);
+          }
+          
+          // 현재 주의 종료일 계산 (가장 늦은 근무 요일의 종료 시간)
+          const weekEndDay = weekStartDay + (latestWorkday - earliestWorkday);
+          
+          // 주의 시작 시간 (가장 이른 근무 요일의 시작 시간)
+          const weekStartTime = new Date(
+            year,
+            month,
+            weekStartDay,
+            workweekSettings.startHour,
+            workweekSettings.startMinute
+          ).getTime();
+          
+          // 주의 종료 시간 (가장 늦은 근무 요일의 종료 시간)
+          const weekEndTime = new Date(
+            year,
+            month,
+            weekEndDay,
+            workweekSettings.endHour,
+            workweekSettings.endMinute
+          ).getTime();
+          
+          const weekDuration = weekEndTime - weekStartTime;
+          
+          // 현재 시간이 주의 시작 시간 이전이면 0%, 종료 시간 이후면 100%
+          if (time < weekStartTime) {
+            amount = 0;
+            secondsLeft = Math.floor((weekEndTime - weekStartTime) * 0.001);
+          } else if (time >= weekEndTime) {
+            amount = 1;
+            secondsLeft = 0;
+          } else {
+            // 현재 시간이 주 내에 있는 경우
+            // 현재까지의 근무 시간 계산
+            let elapsedTime = 0;
+            
+            // 주의 시작일부터 현재 날짜까지의 각 근무일 계산
+            for (let d = weekStartDay; d <= day; d++) {
+              const checkDate = new Date(year, month, d);
+              const checkWeekday = checkDate.getDay();
+              
+              if (enabledWorkdays.includes(checkWeekday)) {
+                const dayStartTime = new Date(
+                  year,
+                  month,
+                  d,
+                  workweekSettings.startHour,
+                  workweekSettings.startMinute
+                ).getTime();
+                const dayEndTime = new Date(
+                  year,
+                  month,
+                  d,
+                  workweekSettings.endHour,
+                  workweekSettings.endMinute
+                ).getTime();
+                
+                if (d < day) {
+                  // 과거 날짜는 전체 근무 시간 추가
+                  elapsedTime += dayEndTime - dayStartTime;
+                } else if (d === day) {
+                  // 오늘 날짜는 현재 시간까지의 경과 시간 추가
+                  if (time >= dayStartTime && time < dayEndTime) {
+                    elapsedTime += time - dayStartTime;
+                  } else if (time >= dayEndTime) {
+                    elapsedTime += dayEndTime - dayStartTime;
+                  }
+                }
+              }
+            }
+            
+            amount = elapsedTime / weekDuration;
+            secondsLeft = Math.floor((weekEndTime - time) * 0.001);
+          }
+          
+          minutesLeft = Math.floor(secondsLeft / 60);
+          specs["m"] = numberWithCommas(minutesLeft);
+          hoursLeft = Math.floor(minutesLeft / 60);
+          specs["h"] = numberWithCommas(hoursLeft);
+          daysLeft = Math.floor(hoursLeft / 24);
+          specs["d"] = numberWithCommas(daysLeft);
+          break;
+
         case "month":
           start = new Date(year, month).getTime();
           if (month === 11) {
@@ -295,6 +432,8 @@ export function useTimeLeft() {
       let title = type.charAt(0).toUpperCase() + type.slice(1);
       if (type === "workday") {
         title = "Work Day";
+      } else if (type === "workweek") {
+        title = "Work Week";
       }
       newTimes[type] = {
         type,

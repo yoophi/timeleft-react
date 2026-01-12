@@ -3,6 +3,7 @@ import { useTimeLeft, TIME_TYPES } from "../hooks/useTimeLeft";
 import { HourCard } from "./HourCard";
 import { DayCard } from "./DayCard";
 import { WeekCard } from "./WeekCard";
+import { WorkWeekCard } from "./WorkWeekCard";
 import { MonthCard } from "./MonthCard";
 import { YearCard } from "./YearCard";
 import { DecadeCard } from "./DecadeCard";
@@ -115,13 +116,14 @@ export const TimeGrid: React.FC = () => {
             <div key={type}>
               {type === "hour" && <HourCard {...cardProps} />}
               {type === "day" && <DayCard {...cardProps} />}
+              {type === "workday" && <WorkDayCard {...cardProps} />}
               {type === "week" && <WeekCard {...cardProps} />}
+              {type === "workweek" && <WorkWeekCard {...cardProps} />}
               {type === "month" && <MonthCard {...cardProps} />}
               {type === "year" && <YearCard {...cardProps} />}
               {type === "decade" && <DecadeCard {...cardProps} />}
               {type === "century" && <CenturyCard {...cardProps} />}
               {type === "millenium" && <MilleniumCard {...cardProps} />}
-              {type === "workday" && <WorkDayCard {...cardProps} />}
             </div>
           );
         })}

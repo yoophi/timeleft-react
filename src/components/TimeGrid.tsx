@@ -1,6 +1,13 @@
 import React, { useEffect } from "react";
 import { useTimeLeft, TIME_TYPES } from "../hooks/useTimeLeft";
-import { TimeCard } from "./TimeCard";
+import { HourCard } from "./HourCard";
+import { DayCard } from "./DayCard";
+import { WeekCard } from "./WeekCard";
+import { MonthCard } from "./MonthCard";
+import { YearCard } from "./YearCard";
+import { DecadeCard } from "./DecadeCard";
+import { CenturyCard } from "./CenturyCard";
+import { MilleniumCard } from "./MilleniumCard";
 import { useLocation, useNavigate } from "react-router-dom";
 
 export const TimeGrid: React.FC = () => {
@@ -96,16 +103,23 @@ export const TimeGrid: React.FC = () => {
           // If hasActive is true, hide all non-active cards.
           const isHidden = hasActive && !isActive;
 
+          const cardProps = {
+            item,
+            isActive,
+            isHidden,
+            onClick: () => handleCardClick(type),
+          };
+
           return (
             <div key={type}>
-              {" "}
-              {/* Wrapper div to match grid structure? Original had <div><div class="c-card ..."></div></div> */}
-              <TimeCard
-                item={item}
-                isActive={isActive}
-                isHidden={isHidden}
-                onClick={() => handleCardClick(type)}
-              />
+              {type === "hour" && <HourCard {...cardProps} />}
+              {type === "day" && <DayCard {...cardProps} />}
+              {type === "week" && <WeekCard {...cardProps} />}
+              {type === "month" && <MonthCard {...cardProps} />}
+              {type === "year" && <YearCard {...cardProps} />}
+              {type === "decade" && <DecadeCard {...cardProps} />}
+              {type === "century" && <CenturyCard {...cardProps} />}
+              {type === "millenium" && <MilleniumCard {...cardProps} />}
             </div>
           );
         })}

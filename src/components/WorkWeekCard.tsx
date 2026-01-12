@@ -31,7 +31,6 @@ export const WorkWeekCard: React.FC<WorkWeekCardProps> = ({
 }) => {
   const { percentage, specs, title, type } = item;
   const [hoveredDay, setHoveredDay] = useState<number | null>(null);
-  const { progressColor, progressShadow, containerColor } = useColorLogic(percentage);
   
   const style: React.CSSProperties = {
     display: isHidden ? "none" : "flex",

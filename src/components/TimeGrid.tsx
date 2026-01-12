@@ -1,4 +1,5 @@
 import React, { useEffect } from "react";
+import { getWorkdaySettings } from "../utils/workdaySettings";
 import { useTimeLeft, TIME_TYPES } from "../hooks/useTimeLeft";
 import { HourCard } from "./HourCard";
 import { DayCard } from "./DayCard";
@@ -97,7 +98,14 @@ export const TimeGrid: React.FC = () => {
         </div>
 
         {/* Time Cards */}
+
         {TIME_TYPES.map((type) => {
+          // Settings check
+          const settings = getWorkdaySettings();
+          if (settings.visibleCards && settings.visibleCards[type] === false) {
+            return null;
+          }
+
           const item = times[type];
           if (!item) return null; // Wait for first render calculation
 

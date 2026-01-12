@@ -1,7 +1,7 @@
 import { HashRouter } from "react-router-dom";
 import { TimeGrid } from "./components/TimeGrid";
 import { useState } from "react";
-import { WorkdaySettingsModal } from "./components/WorkdaySettingsModal";
+import { SettingsModal } from "./components/SettingsModal";
 import type { WorkdaySettings } from "./utils/workdaySettings";
 
 function App() {
@@ -39,7 +39,7 @@ function App() {
         <main className="g-main">
           <TimeGrid />
         </main>
-        <WorkdaySettingsModal
+        <SettingsModal
           isOpen={isSettingsOpen}
           onClose={() => setIsSettingsOpen(false)}
           onSave={handleSettingsSave}

@@ -64,6 +64,14 @@ To create a production build:
 npm run build
 ```
 
+### Deployment
+
+To deploy to GitHub Pages:
+
+```bash
+npm run deploy
+```
+
 ## License
 
 Based on the original [Timeleft](https://github.com/aoueon/timeleft) by Raoul Simionas.

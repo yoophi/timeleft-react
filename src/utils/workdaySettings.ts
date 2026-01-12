@@ -12,6 +12,7 @@ export interface WorkdaySettings {
     saturday: boolean;  // 6
     sunday: boolean;    // 0
   };
+  visibleCards?: Record<string, boolean>;
 }
 
 const DEFAULT_SETTINGS: WorkdaySettings = {
@@ -27,6 +28,18 @@ const DEFAULT_SETTINGS: WorkdaySettings = {
     friday: true,
     saturday: false,
     sunday: false,
+  },
+  visibleCards: {
+    hour: true,
+    day: true,
+    workday: true,
+    week: true,
+    workweek: true,
+    month: true,
+    year: true,
+    decade: true,
+    century: true,
+    millenium: true,
   },
 };
 
@@ -67,6 +80,25 @@ export function getWorkdaySettings(): WorkdaySettings {
           });
           parsed.workdays = workdays;
         }
+
+        // visibleCards 설정이 없거나 불완전하면 기본값으로 채움
+        if (!parsed.visibleCards || typeof parsed.visibleCards !== "object") {
+          parsed.visibleCards = { ...DEFAULT_SETTINGS.visibleCards };
+        } else {
+          // 각 카드가 없으면 기본값으로 채움
+          const visibleCards = { ...DEFAULT_SETTINGS.visibleCards };
+          if (DEFAULT_SETTINGS.visibleCards) {
+            Object.keys(DEFAULT_SETTINGS.visibleCards).forEach((key) => {
+              if (typeof parsed.visibleCards![key] !== "boolean") {
+                parsed.visibleCards![key] = visibleCards[key];
+              } else {
+                visibleCards[key] = parsed.visibleCards![key];
+              }
+            });
+          }
+          parsed.visibleCards = visibleCards;
+        }
+
         return parsed as WorkdaySettings;
       }
     }

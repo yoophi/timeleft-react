@@ -8,6 +8,7 @@ import { YearCard } from "./YearCard";
 import { DecadeCard } from "./DecadeCard";
 import { CenturyCard } from "./CenturyCard";
 import { MilleniumCard } from "./MilleniumCard";
+import { WorkDayCard } from "./WorkDayCard";
 import { useLocation, useNavigate } from "react-router-dom";
 
 export const TimeGrid: React.FC = () => {
@@ -120,6 +121,7 @@ export const TimeGrid: React.FC = () => {
               {type === "decade" && <DecadeCard {...cardProps} />}
               {type === "century" && <CenturyCard {...cardProps} />}
               {type === "millenium" && <MilleniumCard {...cardProps} />}
+              {type === "workday" && <WorkDayCard {...cardProps} />}
             </div>
           );
         })}

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { getWorkdaySettings } from "../utils/workdaySettings";
 
 export interface TimeSpec {
   value: string;
@@ -15,6 +16,7 @@ export interface TimeItem {
 export const TIME_TYPES = [
   "hour",
   "day",
+  "workday",
   "week",
   "month",
   "year",
@@ -255,12 +257,48 @@ export function useTimeLeft() {
           specs["de"] = numberWithCommas(Math.floor((endYear - year) / 10));
           specs["c"] = numberWithCommas(Math.floor((endYear - year) / 100));
           break;
+
+        case "workday":
+          // localStorage에서 설정값 가져오기
+          const workdaySettings = getWorkdaySettings();
+          const workStartHour = workdaySettings.startHour;
+          const workStartMinute = workdaySettings.startMinute;
+          const workEndHour = workdaySettings.endHour;
+          const workEndMinute = workdaySettings.endMinute;
+          
+          const workStartTime = new Date(year, month, day, workStartHour, workStartMinute).getTime();
+          const workEndTime = new Date(year, month, day, workEndHour, workEndMinute).getTime();
+          const workDuration = workEndTime - workStartTime;
+          
+          // 현재 시간이 출근 시간 이전이면 0%, 퇴근 시간 이후면 100%
+          if (time < workStartTime) {
+            amount = 0;
+            // 남은 시간을 출근 시간부터 계산
+            secondsLeft = Math.floor((workEndTime - workStartTime) * 0.001);
+          } else if (time >= workEndTime) {
+            amount = 1;
+            secondsLeft = 0;
+          } else {
+            diff = time - workStartTime;
+            amount = diff / workDuration;
+            secondsLeft = Math.floor((workEndTime - time) * 0.001);
+          }
+          
+          minutesLeft = Math.floor(secondsLeft / 60);
+          specs["m"] = numberWithCommas(minutesLeft);
+          hoursLeft = Math.floor(minutesLeft / 60);
+          specs["h"] = numberWithCommas(hoursLeft);
+          break;
       }
 
       let percentage = Math.floor(amount * 100);
+      let title = type.charAt(0).toUpperCase() + type.slice(1);
+      if (type === "workday") {
+        title = "Work Day";
+      }
       newTimes[type] = {
         type,
-        title: type.charAt(0).toUpperCase() + type.slice(1),
+        title,
         percentage,
         specs,
       };

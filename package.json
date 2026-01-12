@@ -2,6 +2,7 @@
   "name": "timeleft-react",
   "private": true,
   "version": "0.0.0",
+  "homepage": "https://yoophi.github.io/timeleft-react/",
   "type": "module",
   "scripts": {
     "dev": "vite",

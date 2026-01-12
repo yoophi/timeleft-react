@@ -1,0 +1,49 @@
+.g-site {
+  min-height: 100vh;
+}
+
+.g-site,
+.g-main {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.gap {
+  @include gap(1em);
+  @include phone {
+    @include gap(0.7em);
+  }
+}
+.gap-s {
+  @include gap(0.4em);
+}
+.vgap {
+  @include vgap(0.8em);
+  @include phone {
+    @include vgap(0.4em);
+  }
+}
+
+html {
+  background: $color-bg;
+}
+
+@mixin outer {
+  padding-left: 1em;
+  padding-right: 1em;
+}
+
+$border: 3px solid $color-dark;
+
+.g-header {
+  padding: 3em;
+  @include outer;
+  text-align: center;
+  border-bottom: $border;
+  // box-shadow: inset 0 0 10px #ff000029;
+}
+.g-footer {
+  border-top: $border;
+  margin-top: -3px;
+}

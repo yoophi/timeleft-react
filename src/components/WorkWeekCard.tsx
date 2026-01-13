@@ -31,7 +31,7 @@ export const WorkWeekCard: React.FC<WorkWeekCardProps> = ({
 }) => {
   const { percentage, specs, title, type } = item;
   const [hoveredDay, setHoveredDay] = useState<number | null>(null);
-  
+
   const style: React.CSSProperties = {
     display: isHidden ? "none" : "flex",
   };
@@ -39,7 +39,7 @@ export const WorkWeekCard: React.FC<WorkWeekCardProps> = ({
   // 설정에서 근무 요일 가져오기
   const workdaySettings = getWorkdaySettings();
   const workdays = workdaySettings.workdays;
-  
+
   // 근무 요일 목록 생성
   const enabledWorkdays: number[] = [];
   Object.entries(workdays).forEach(([dayName, enabled]) => {
@@ -59,70 +59,81 @@ export const WorkWeekCard: React.FC<WorkWeekCardProps> = ({
   const currentDay = now.getDate();
   const currentWeekday = now.getDay();
 
+  const todayMidnight = new Date(currentYear, currentMonth, currentDay);
+  const todayMidnightTime = todayMidnight.getTime();
+
   // 각 근무일의 상태 계산
   const workDays: Array<{
     day: number;
     weekday: number;
     label: string;
     percentage: number;
-    status: 'elapsed' | 'current' | 'future';
+    status: "elapsed" | "current" | "future";
   }> = [];
 
   if (enabledWorkdays.length > 0) {
     const earliestWorkday = Math.min(...enabledWorkdays);
     const latestWorkday = Math.max(...enabledWorkdays);
-    
+
     let weekStartDay = currentDay;
     if (currentWeekday < earliestWorkday) {
       weekStartDay = currentDay - 7 + (earliestWorkday - currentWeekday);
     } else if (currentWeekday > earliestWorkday) {
       weekStartDay = currentDay - (currentWeekday - earliestWorkday);
     }
-    
-    for (let d = weekStartDay; d <= weekStartDay + (latestWorkday - earliestWorkday); d++) {
+
+    for (
+      let d = weekStartDay;
+      d <= weekStartDay + (latestWorkday - earliestWorkday);
+      d++
+    ) {
       const checkDate = new Date(currentYear, currentMonth, d);
       const checkWeekday = checkDate.getDay();
-      
+
       if (enabledWorkdays.includes(checkWeekday)) {
         const dayStartTime = new Date(
           currentYear,
           currentMonth,
           d,
           workdaySettings.startHour,
-          workdaySettings.startMinute
+          workdaySettings.startMinute,
         ).getTime();
         const dayEndTime = new Date(
           currentYear,
           currentMonth,
           d,
           workdaySettings.endHour,
-          workdaySettings.endMinute
+          workdaySettings.endMinute,
         ).getTime();
-        
+
         let dayPercentage = 0;
-        let dayStatus: 'elapsed' | 'current' | 'future' = 'future';
-        
-        if (d < currentDay) {
+        let dayStatus: "elapsed" | "current" | "future" = "future";
+
+        const checkTime = checkDate.getTime();
+
+        if (checkTime < todayMidnightTime) {
           // 지난 날짜
-          dayStatus = 'elapsed';
+          dayStatus = "elapsed";
           dayPercentage = 100;
-        } else if (d === currentDay) {
+        } else if (checkTime === todayMidnightTime) {
           // 오늘
-          dayStatus = 'current';
+          dayStatus = "current";
           if (currentTime < dayStartTime) {
             dayPercentage = 0;
           } else if (currentTime >= dayEndTime) {
             dayPercentage = 100;
           } else {
-            dayPercentage = ((currentTime - dayStartTime) / (dayEndTime - dayStartTime)) * 100;
+            dayPercentage =
+              ((currentTime - dayStartTime) / (dayEndTime - dayStartTime)) *
+              100;
           }
         } else {
           // 미래 날짜
-          dayStatus = 'future';
+          dayStatus = "future";
           dayPercentage = 0;
         }
-        
-        const dayLabels = ['일', '월', '화', '수', '목', '금', '토'];
+
+        const dayLabels = ["일", "월", "화", "수", "목", "금", "토"];
         workDays.push({
           day: d,
           weekday: checkWeekday,
@@ -132,6 +143,15 @@ export const WorkWeekCard: React.FC<WorkWeekCardProps> = ({
         });
       }
     }
+  }
+
+  let calculatedPercentage = percentage;
+  if (workDays.length > 0) {
+    const totalPercentage = workDays.reduce(
+      (acc, cur) => acc + cur.percentage,
+      0,
+    );
+    calculatedPercentage = Math.floor(totalPercentage / workDays.length);
   }
 
   return (
@@ -174,7 +194,7 @@ export const WorkWeekCard: React.FC<WorkWeekCardProps> = ({
                       stroke="blue"
                       fill="transparent"
                       strokeDasharray="565.48"
-                      strokeDashoffset={566 - (76 / 100) * percentage}
+                      strokeDashoffset={566 - (76 / 100) * calculatedPercentage}
                       style={{
                         stroke: "#f5f5f5",
                         transition: "all 1s ease-out",
@@ -190,7 +210,7 @@ export const WorkWeekCard: React.FC<WorkWeekCardProps> = ({
           </div>
           <div>
             <div className="h1">
-              <span className="f-time-percentage">{percentage}</span>
+              <span className="f-time-percentage">{calculatedPercentage}</span>
               <span className="t-gray">%</span>
             </div>
           </div>
@@ -209,9 +229,8 @@ export const WorkWeekCard: React.FC<WorkWeekCardProps> = ({
         </div>
       </div>
       <div className="c-card-footer" style={{ position: "relative" }}>
-        
         {/* 각 근무일 사각형 */}
-        <div 
+        <div
           style={{
             display: "flex",
             gap: "4px",
@@ -222,10 +241,11 @@ export const WorkWeekCard: React.FC<WorkWeekCardProps> = ({
         >
           {workDays.map((workDay, index) => {
             const blockPercentage = ((index + 1) / workDays.length) * 100;
-            const { progressColor, progressShadow, containerColor } = useColorLogic(blockPercentage);
-            
+            const { progressColor, progressShadow, containerColor } =
+              useColorLogic(blockPercentage);
+
             const isHovered = hoveredDay === workDay.day;
-            
+
             return (
               <div
                 key={workDay.day}
@@ -247,7 +267,7 @@ export const WorkWeekCard: React.FC<WorkWeekCardProps> = ({
                 title={`${workDay.label}요일`}
               >
                 {/* 진행률 표시 (오늘만 - 가로 방향) */}
-                {workDay.status === 'current' && (
+                {workDay.status === "current" && (
                   <div
                     style={{
                       position: "absolute",
@@ -262,7 +282,7 @@ export const WorkWeekCard: React.FC<WorkWeekCardProps> = ({
                   />
                 )}
                 {/* 지난 날짜는 완전히 채워진 배경 */}
-                {workDay.status === 'elapsed' && (
+                {workDay.status === "elapsed" && (
                   <div
                     style={{
                       position: "absolute",
@@ -283,4 +303,3 @@ export const WorkWeekCard: React.FC<WorkWeekCardProps> = ({
     </div>
   );
 };
-
